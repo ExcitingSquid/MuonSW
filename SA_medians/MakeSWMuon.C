@@ -164,11 +164,19 @@ void MakeSWMuon::Loop()
 
       int fpix_size = fRecHitGx->size();
 
+	  //수정
+
+	  float genPhi;
+	  for(int i = 0 ; i < genPartN ; i++){
+		  if(genPartId->at(i) == 13) genPhi = genPartPhi->at(i);
+	  }
+
       for( int a = 0; a < fpix_size; a++){
 		
 	      TVector3 current_hit;
 	      current_hit.SetXYZ( fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a) );
 	      double Dphi = deltaPhi(current_hit.Phi(), closest_me0Phi);
+		  if(fabs(genPhi - current_hit.Phi())>0.1) continue;
 
 	      if( Dphi > upper_roi || Dphi < lower_roi ) continue;
 
