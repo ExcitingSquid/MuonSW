@@ -86,6 +86,7 @@ void MuonEff::Loop()
 	  int closest_me0 = -1;
 	  int me0Count = 0;
 
+	  float me0Phi, me0Eta;
       for( int i = 0; i < me0N; i++){
 	      TVector3 me0SegPos;
 	      me0SegPos.SetXYZ(me0SegPosX->at(i), me0SegPosY->at(i), me0SegPosZ->at(i));
@@ -125,7 +126,7 @@ void MuonEff::Loop()
 		  me0SegPos.SetXYZ(me0X, me0Y, me0Z);
 		  ME0Et = genPartPt->at(0); // !!!!!!!! genPartPt instead me0 !!!!!!!
 		  ME0Eta = me0SegPos.Eta();
-		  ME0Phi = me0SegPos.Phi();
+		  float	  me0Phi = me0SegPos.Phi();		//수정 (ME0Phi는 수정이 안됨. 다른 값을 넣어도 다시 돌아가요)
 
 //cout<<"isTrackMatched->at "<<isTrackMatched->at(1)<<endl;
 //		  isTrack_match.push_back(isTrackMatched->at(closest_me0));
@@ -135,8 +136,8 @@ void MuonEff::Loop()
 		  emvector.SetXYZ(me0X, me0Y, me0Z);
 
 		  tempDR = closest_dr; 
-		  matchedME0Eta = ME0Eta;
-		  matchedME0Phi = ME0Phi;
+		  matchedME0Eta = me0Eta;
+		  matchedME0Phi = me0Phi;
 		  matchedME0Et  = ME0Et;
 //		  indx_closestME0 = indx;
 cout<<"region "<<eta_region<<endl;
@@ -146,8 +147,8 @@ cout<<"region "<<eta_region<<endl;
 
 		  ntnME02++;
 		  ntME0Et.push_back(ME0Et);
-		  ntME0Eta.push_back(ME0Eta);
-		  ntME0Phi.push_back(ME0Phi);
+		  ntME0Eta.push_back(me0Eta);
+		  ntME0Phi.push_back(me0Phi);
 
 		  // set region of interest
 		  SetROI(eta_region);
