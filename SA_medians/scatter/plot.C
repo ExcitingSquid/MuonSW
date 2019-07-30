@@ -71,9 +71,21 @@ void plot::Loop()
 	  std::vector<TVector3> D3;
 	  std::vector<TVector3> D4;
 	  std::vector<TVector3> D5;
+//수정
+	  TVector3 Disk_Phi;
+	  float genPhi;
+
+	  for(int i = 0; i < genPartN ; i++){
+		  if(genPartId->at(i) == 13) genPhi = genPartPhi->at(i);
+	  }
+
+
 
 	  BS.push_back( TVector3(0,0,0));
 	  for(int i = 0; i < fRecHitN; i++){
+
+		  Disk_Phi.SetXYZ(fRecHitGx->at(i),fRecHitGy->at(i),fRecHitGz->at(i));
+		  if( fabs(genPhi - Disk_Phi.Phi())>0.1) continue;
 		  if( fRecHitDisk->at(i)== 1 ) D1.push_back( TVector3(fRecHitGx->at(i),fRecHitGy->at(i),fRecHitGz->at(i)) );
 		  if( fRecHitDisk->at(i)== 2 ) D2.push_back( TVector3(fRecHitGx->at(i),fRecHitGy->at(i),fRecHitGz->at(i)) );
 		  if( fRecHitDisk->at(i)== 3 ) D3.push_back( TVector3(fRecHitGx->at(i),fRecHitGy->at(i),fRecHitGz->at(i)) );
@@ -173,7 +185,7 @@ void plot::Loop()
 	   y1[j] = ab[0]*pow(j,0)+ab[1]*pow(j,ab[2])*exp(-pow(j,ab[3])+ab[4]);
 	   if(eta_or_phi == 1 && Region == 1) y2[j] = 0.008;
 	   if(eta_or_phi == 1 && Region == 1) y2[j] = 0.01;
-	   if(eta_or_phi == 2) y2[j] = 0.002;
+	   if(eta_or_phi == 2) y2[j] = 0.0025;	// 0.002 -> 0.0025
    }
    c1->SetGrid();
    TGraphErrors *gr2 = new TGraphErrors(binSize,x1,y1,x2,y2);
