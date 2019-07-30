@@ -1132,9 +1132,10 @@ void MuonEff::FillHist(TString histname, float value, float w, float xmin, float
      if(GetHist(histname)) GetHist(histname)->Fill(value, w);
  }
 }
-
+// 수정
 double MuonEff::StandaloneDPhi( int first_hit, int second_hit, int third_hit, int which_first_hit, int which_second_hit, int which_third_hit ){
   if( first_hit == 0 ){
+	  float result1;
 
      TVector3 temp;
 
@@ -1143,9 +1144,9 @@ double MuonEff::StandaloneDPhi( int first_hit, int second_hit, int third_hit, in
      if( second_hit == 3 ) temp.SetXYZ( third_disk_hits[which_second_hit].X(), third_disk_hits[which_second_hit].Y(), third_disk_hits[which_second_hit].Z() );
 
 
-     if( third_hit == 2 ) return deltaPhi( (second_disk_hits[which_third_hit] - temp).Phi(), temp.Phi());
-     if( third_hit == 3 ) return deltaPhi( (third_disk_hits[which_third_hit] - temp).Phi(),  temp.Phi());
-     if( third_hit == 4 ) return deltaPhi( (fourth_disk_hits[which_third_hit] - temp).Phi(), temp.Phi());
+     if( third_hit == 2 ) result1 = deltaPhi( (second_disk_hits[which_third_hit] - temp).Phi(), temp.Phi());
+     if( third_hit == 3 ) result1 = deltaPhi( (third_disk_hits[which_third_hit] - temp).Phi(),  temp.Phi());
+     if( third_hit == 4 ) result1 = deltaPhi( (fourth_disk_hits[which_third_hit] - temp).Phi(), temp.Phi());
 
   }
   if( first_hit != 0 ){
@@ -1163,9 +1164,9 @@ double MuonEff::StandaloneDPhi( int first_hit, int second_hit, int third_hit, in
     if( third_hit == 3 ) temp_third_layer = third_disk_hits[which_third_hit];
     if( third_hit == 4 ) temp_third_layer = fourth_disk_hits[which_third_hit];
 
-    return deltaPhi( (temp_third_layer - temp_second_layer).Phi(), (temp_second_layer - temp_first_layer).Phi());
+    result1 = deltaPhi( (temp_third_layer - temp_second_layer).Phi(), (temp_second_layer - temp_first_layer).Phi());
   }
-  return 0.;
+  return result1;
 }
 
 double MuonEff::StandaloneDEta( int first_hit, int second_hit, int third_hit, int which_first_hit, int which_second_hit, int which_third_hit ){
@@ -1201,7 +1202,7 @@ double MuonEff::EMmatchingDPhi(TVector3& first_layer, TVector3& second_layer, TV
     TVector3 pixelVector = second_layer - first_layer;
     TVector3 EM_pixelVector = egvector - second_layer;
 
-    return deltaPhi( EM_pixelVector.Phi(), pixelVector.Phi() );
+    return -deltaPhi( EM_pixelVector.Phi(), pixelVector.Phi() );	//수정, -부호
 }
 
 int MuonEff::Signal_window_check( double upper, double value, double lower, int Ele_Pos){
@@ -1244,8 +1245,19 @@ void MuonEff::FillCutFlow(TString cut, float weight){
   }
 }
 
-void MuonEff::StorePixelHit(int region){
+void MuonEff::StorePixelHit(int region){		//수정
 
+		float IdgenPhi, me0Phi;
+		for(int i = 0; i < genPartN ; i++){
+			if(genPartId->at(i) == 13) IdgenPhi = genPartPhi->at(i);
+		}
+		me0N=me0SegPosX->size();
+		for(int i = 0; i < me0N; i++){
+			TVector3 me0SegPos;
+			me0SegPos.SetXYZ(me0SegPosX->at(i),me0SegPosY->at(i),me0SegPosZ->at(i));
+			if(fabs(IdgenPhi - me0SegPos.Phi())>0.1)continue;
+			me0Phi = me0SegPos.Phi();
+		}
         for(int a=0; a<fRecHitN; a++){
            int Dphi_Ele_pass = 0;
            int Dphi_Pos_pass = 0;
@@ -1253,7 +1265,7 @@ void MuonEff::StorePixelHit(int region){
            int el_or_po = 0; // electron = 1, positron = 2, both = 3
            TVector3 current_hit;
            current_hit.SetXYZ( fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a) );
-           Dphi = deltaPhi(current_hit.Phi(), ME0Phi);
+           Dphi = deltaPhi(current_hit.Phi(), me0Phi);		//ME0 -> me0
 
            if( region == 2 ){
 
@@ -1264,7 +1276,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L1_Dphi_cut1 && Dphi < -L1_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){		// 안티 뮤온이 지날 때 layer++ 안함.
                  layers[1]++;
                  first_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  first_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1278,7 +1290,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L2_Dphi_cut1 && Dphi < -L2_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[2]++;
                  second_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  second_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1291,7 +1303,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L3_Dphi_cut1 && Dphi < -L3_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[3]++;
                  third_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  third_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1305,7 +1317,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L4_Dphi_cut1 && Dphi < -L4_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[4]++;
                  fourth_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  fourth_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1323,7 +1335,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L1_Dphi_cut1 && Dphi < -L1_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[1]++;
                  first_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  first_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1337,7 +1349,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L2_Dphi_cut1 && Dphi < -L2_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[2]++;
                  second_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  second_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1350,7 +1362,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L3_Dphi_cut1 && Dphi < -L3_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[3]++;
                  third_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  third_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1364,7 +1376,7 @@ void MuonEff::StorePixelHit(int region){
                if( Dphi > -L4_Dphi_cut1 && Dphi < -L4_Dphi_cut2){
                   Dphi_Pos_pass = 1; el_or_po = el_or_po + 2;
                }
-               if( Dphi_Ele_pass || Dphi_Pos_pass ){
+               if( Dphi_Ele_pass){
                  layers[4]++;
                  fourth_disk_hits.push_back( TVector3(fRecHitGx->at(a), fRecHitGy->at(a), fRecHitGz->at(a)));
                  fourth_disk_hits_Ele_or_Pos.push_back(el_or_po);
@@ -1383,8 +1395,8 @@ void MuonEff::StorePixelHit(int region){
 void MuonEff::SetROI(int region){
 
 
-  float upper_width = 0.055;
-  float lower_width = 0.055;
+  float upper_width = 0.016;
+  float lower_width = 0.016;
 
   L1_Dphi_cut1 = ROI_func(region, ME0Et);
   L1_Dphi_cut2 = ROI_func(region, ME0Et);
